@@ -9,7 +9,6 @@ socketio = SocketIO(app)
 
 rooms = {}
 
-
 @app.route('/', methods=["GET", "POST"])
 def home():
     session.clear()
@@ -27,15 +26,14 @@ def home():
             room_code = generate_room_code(6, list(rooms.keys()))
             new_room = {
                 'members': 0,
-                'messages': []
+                'messages': [],
+                'users': []
             }
             rooms[room_code] = new_room
 
         if join != False:
-            # no code
             if not code:
                 return render_template('home.html', error="Please enter a room code to enter a chat room", name=name)
-            # invalid code
             if code not in rooms:
                 return render_template('home.html', error="Room code invalid", name=name)
 
@@ -50,14 +48,15 @@ def home():
 
 @app.route('/room')
 def room():
-    room = session.get('room')
+    room_code = session.get('room')
     name = session.get('name')
 
-    if name is None or room is None or room not in rooms:
+    if name is None or room_code is None or room_code not in rooms:
         return redirect(url_for('home'))
 
-    messages = rooms[room]['messages']
-    return render_template('room.html', room=room, user=name, messages=messages)
+    messages = rooms[room_code]['messages']
+    users = rooms[room_code].get('users', [])
+    return render_template('room.html', room=room_code, user=name, messages=messages, users=users)
 
 
 @socketio.on('connect')
@@ -67,15 +66,23 @@ def handle_connect():
 
     if name is None or room is None:
         return
+
     if room not in rooms:
-        leave_room(room)
+        rooms[room] = {'members': 0, 'messages': [], 'users': []}
 
     join_room(room)
+    rooms[room]['members'] += 1
+    rooms[room]['users'].append(name)
+
     send({
         "sender": "",
         "message": f"{name} has entered the chat"
     }, to=room)
-    rooms[room]["members"] += 1
+
+    send({
+        "sender": "",
+        "message": f"Users in the room: {', '.join(rooms[room]['users'])}"
+    }, to=room)
 
 
 @socketio.on('message')
@@ -102,6 +109,7 @@ def handle_disconnect():
 
     if room in rooms:
         rooms[room]["members"] -= 1
+        rooms[room]['users'].remove(name)
         if rooms[room]["members"] <= 0:
             del rooms[room]
 
@@ -112,4 +120,4 @@ def handle_disconnect():
 
 
 if __name__ == '__main__':
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="127.0.0.1", port=5000, debug=True)
