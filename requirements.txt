@@ -2,3 +2,5 @@ flask
 flask-socketio
 eventlet
 gunicorn
+Flask-WTF
+pymongo
