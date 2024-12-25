@@ -108,17 +108,16 @@ Here’s an overview of the project's file structure:
 Chatify/
 │
 ├── .venv/                  # Virtual environment
-├── app.py                  # Main Flask app
+├── main.py                  # Main Flask app
 ├── templates/              # HTML templates for the front-end
-│   ├── index.html
-│   ├── chat_room.html
-│   └── ...
+│   ├── home.html
+│   ├── room.html
+│   └── base.html
 ├── static/                 # Static files (CSS, JavaScript, Images)
-│   ├── styles.css
-│   └── script.js
+│   ├── style.css
 ├── requirements.txt        # Python dependencies
 ├── README.md               # This file
-└── config.py               # Configuration file (e.g., MongoDB URI)
+└── utils.py              # Configuration file 
 ```
 
 ## Contribution Guidelines
