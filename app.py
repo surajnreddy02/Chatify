@@ -12,41 +12,39 @@ socketio = SocketIO(app)
 
 rooms = {}
 
+
 @app.route('/', methods=["GET", "POST"])
 def home():
     session.clear()
 
     if request.method == "POST":
         name = request.form.get('name')
-        create = request.form.get('create', False)
+        action = request.form.get('action')
         code = request.form.get('code')
-        join = request.form.get('join', False)
 
         if not name:
             return render_template('home.html', error="Name is required", code=code)
 
-        if create != False:
+        if action == "create":
             room_code = generate_room_code(6, list(rooms.keys()))
-            new_room = {
-                'members': 0,
-                'messages': [],
-                'users': []
-            }
-            rooms[room_code] = new_room
-
-        if join != False:
+            rooms[room_code] = {'members': 0, 'messages': [], 'users': []}
+        elif action == "join":
             if not code:
-                return render_template('home.html', error="Please enter a room code to enter a chat room", name=name)
+                return render_template('home.html', error="Please enter a room code to join", name=name)
             if code not in rooms:
-                return render_template('home.html', error="Room code invalid", name=name)
+                return render_template('home.html', error="Room code is invalid", name=name)
+            if name in rooms[code]['users']:
+                return render_template('home.html', error="Name already taken in this room", name=name, code=code)
 
             room_code = code
+        else:
+            return render_template('home.html', error="Please select an action (Create or Join)", name=name)
 
         session['room'] = room_code
         session['name'] = name
         return redirect(url_for('room'))
-    else:
-        return render_template('home.html')
+
+    return render_template('home.html')
 
 
 @app.route('/room')
