@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+<div id="room-container">
+  <h1 id="home-header">Chatify 💬</h1>
+  <div id="room-subsection">
+    <h2 id="room-code-display">Room Code: <span>{{room}}</span></h2>
+    <a href="/" id="leave-chat-btn">Leave the Chat</a>
+  </div>
+
+  <div id="chat-room-widget">
+    <div id="msgs-container">
+      <ul id="messages"></ul>
+    </div>
+
+    <div id="typing-indicator" class="typing-animation"></div>
+
+    <div id="message-box">
+      <input
+        type="text"
+        placeholder="Enter your message"
+        id="message-input"
+        name="message"
+      />
+      <button type="submit" id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <div id="new-message-notification">New message received!</div>
+
+  <script type="text/javascript">
+    var socketio = io();
+
+    socketio.on("message", function (message) {
+      createChatItem(message.message, message.sender);
+      var notification = document.getElementById("new-message-notification");
+      notification.classList.add("active");
+      setTimeout(function () {
+        notification.classList.remove("active");
+      }, 2000);
+    });
+
+    socketio.on("typing", function (data) {
+      var typingIndicator = document.getElementById("typing-indicator");
+      if (data.typing) {
+        typingIndicator.style.display = "inline-block";
+      } else {
+        typingIndicator.style.display = "none";
+      }
+    });
+
+    // Show typing status to server
+    var typingTimeout;
+    document.getElementById("message-input").addEventListener("input", function () {
+      clearTimeout(typingTimeout);
+      socketio.emit("typing", { typing: true });
+
+      typingTimeout = setTimeout(function () {
+        socketio.emit("typing", { typing: false });
+      }, 1000);
+    });
+
+    function createChatItem(message, sender) {
+      var messages = document.getElementById("messages");
+      var senderIsUser = "{{user}}" === sender;
+      var delivered = senderIsUser ? '✔' : '';
+      var content = `
+        <li class="message-item ${senderIsUser ? "self-message-item" : "peer-message-item"}">
+          <p>${message}</p>
+          <small class="${senderIsUser ? "muted-text" : "muted-text-white"}">${new Date().toLocaleString()} ${delivered}</small>
+        </li>
+      `;
+      messages.innerHTML += content;
+    }
+
+    function sendMessage() {
+      var msgInput = document.getElementById("message-input");
+      if (msgInput.value === "") return;
+
+      var msg = msgInput.value;
+      socketio.emit("message", { message: msg });
+      msgInput.value = "";
+    }
+  </script>
+
+  {% for message in messages %}
+  <script type="text/javascript">
+    createChatItem("{{message.message}}", "{{message.sender}}");
+  </script>
+  {% endfor %}
+</div>
+{% endblock %}
