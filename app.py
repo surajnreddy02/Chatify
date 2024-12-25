@@ -12,7 +12,6 @@ socketio = SocketIO(app)
 
 rooms = {}
 
-
 @app.route('/', methods=["GET", "POST"])
 def home():
     session.clear()
@@ -46,7 +45,6 @@ def home():
 
     return render_template('home.html')
 
-
 @app.route('/room')
 def room():
     room_code = session.get('room')
@@ -58,7 +56,6 @@ def room():
     messages = rooms[room_code]['messages']
     users = rooms[room_code].get('users', [])
     return render_template('room.html', room=room_code, user=name, messages=messages, users=users)
-
 
 @socketio.on('connect')
 def handle_connect():
@@ -85,7 +82,6 @@ def handle_connect():
         "message": f"Users in the room: {', '.join(rooms[room]['users'])}"
     }, to=room)
 
-
 @socketio.on('message')
 def handle_message(payload):
     room = session.get('room')
@@ -96,11 +92,10 @@ def handle_message(payload):
 
     message = {
         "sender": name,
-        "message": payload["message"]
+        "message": payload
     }
     send(message, to=room)
     rooms[room]["messages"].append(message)
-
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -118,7 +113,6 @@ def handle_disconnect():
         "message": f"{name} has left the chat",
         "sender": ""
     }, to=room)
-
 
 if __name__ == '__main__':
     socketio.run(app, host="127.0.0.1", port=5000, debug=True)

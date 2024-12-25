@@ -21,8 +21,9 @@
         placeholder="Enter your message"
         id="message-input"
         name="message"
+        autocomplete="off"
       />
-      <button type="submit" id="send-btn" onclick="sendMessage()">Send</button>
+      <button type="button" id="send-btn" onclick="sendMessage()">Send</button>
     </div>
   </div>
 
@@ -71,6 +72,7 @@
         </li>
       `;
       messages.innerHTML += content;
+      messages.scrollTop = messages.scrollHeight;  // Auto-scroll to the bottom
     }
 
     function sendMessage() {
@@ -79,7 +81,7 @@
 
       var msg = msgInput.value;
       socketio.emit("message", { message: msg });
-      msgInput.value = "";
+      msgInput.value = "";  // Clear input field after sending
     }
   </script>
 
