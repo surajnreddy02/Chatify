@@ -89,13 +89,13 @@ def handle_message(payload):
 
     if room not in rooms:
         return
-
-    message = {
+    message = payload.get("message", "")
+    message_data = {
         "sender": name,
-        "message": payload
+        "message": message
     }
-    send(message, to=room)
-    rooms[room]["messages"].append(message)
+    send(message_data, to=room)
+    rooms[room]["messages"].append(message_data)
 
 @socketio.on('disconnect')
 def handle_disconnect():
